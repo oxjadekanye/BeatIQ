@@ -8,10 +8,10 @@ export const metadata: Metadata = {
   title: "Cookie Policy",
   description:
     "BeatIQ cookie policy — how we use cookies and similar technologies. Contact admin@beatiq.co.uk.",
-  alternates: { canonical: `${siteUrl}/cookie-policy` },
+  alternates: { canonical: `${siteUrl}/cookie-policy/` },
   openGraph: {
     title: "BeatIQ Cookie Policy",
-    url: `${siteUrl}/cookie-policy`,
+    url: `${siteUrl}/cookie-policy/`,
   },
 };
 

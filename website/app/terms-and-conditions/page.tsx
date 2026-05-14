@@ -8,10 +8,10 @@ export const metadata: Metadata = {
   title: "Terms and Conditions",
   description:
     "BeatIQ terms and conditions — rules for using the BeatIQ platform. Contact admin@beatiq.co.uk.",
-  alternates: { canonical: `${siteUrl}/terms-and-conditions` },
+  alternates: { canonical: `${siteUrl}/terms-and-conditions/` },
   openGraph: {
     title: "BeatIQ Terms and Conditions",
-    url: `${siteUrl}/terms-and-conditions`,
+    url: `${siteUrl}/terms-and-conditions/`,
   },
 };
 

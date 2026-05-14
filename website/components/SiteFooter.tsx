@@ -2,9 +2,9 @@ import Link from "next/link";
 import { company } from "@/lib/site";
 
 const legal = [
-  { href: "/privacy-policy", label: "Privacy Policy" },
-  { href: "/terms-and-conditions", label: "Terms and Conditions" },
-  { href: "/cookie-policy", label: "Cookie Policy" },
+  { href: "/privacy-policy/", label: "Privacy Policy" },
+  { href: "/terms-and-conditions/", label: "Terms and Conditions" },
+  { href: "/cookie-policy/", label: "Cookie Policy" },
 ] as const;
 
 export function SiteFooter() {

@@ -8,10 +8,10 @@ export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
     "BeatIQ privacy policy — how we collect, use, and protect your information. Contact admin@beatiq.co.uk.",
-  alternates: { canonical: `${siteUrl}/privacy-policy` },
+  alternates: { canonical: `${siteUrl}/privacy-policy/` },
   openGraph: {
     title: "BeatIQ Privacy Policy",
-    url: `${siteUrl}/privacy-policy`,
+    url: `${siteUrl}/privacy-policy/`,
   },
 };
 

@@ -2,9 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 
 const nav = [
-  { href: "/#features", label: "Features" },
+  { href: "/#discover", label: "Discover" },
   { href: "/#download", label: "App" },
-  { href: "/privacy-policy", label: "Privacy" },
+  { href: "/privacy-policy/", label: "Privacy" },
 ] as const;
 
 export function SiteHeader() {

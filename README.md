@@ -16,7 +16,7 @@ Default settings: `config.settings.development` (SQLite when `USE_SQLITE=true`).
 
 ## Public marketing site (Vercel)
 
-The **Next.js** site for **www.beatiq.co.uk** (landing + legal pages) lives in **`website/`**. It has **no backend dependency**. See **[website/README.md](website/README.md)** for local build and Vercel root directory (`website`).
+The **Next.js** site for **www.beatiq.co.uk** (landing + legal pages) lives in **`website/`**. It has **no backend dependency**. See **[website/README.md](website/README.md)** for local build and **Vercel** setup (repo-root `vercel.json` + static `out/`).
 
 ## Production on Render
 
