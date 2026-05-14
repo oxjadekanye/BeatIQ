@@ -1,7 +1,10 @@
 """
 BeatIQ production settings (Render, VPS, etc.).
 
-When `RENDER` is set, `DATABASE_URL` must be present (link PostgreSQL on Render).
+PostgreSQL via DATABASE_URL is required — SQLite is rejected here (see ImproperlyConfigured
+below) so missing DB config cannot silently break login with HTTP 500.
+
+When `RENDER` or `RENDER_EXTERNAL_URL` is set, DEBUG is forced off and SECRET_KEY is validated.
 Demo/seed commands are never run automatically — invoke manually via management commands.
 """
 
@@ -12,10 +15,18 @@ from django.core.exceptions import ImproperlyConfigured
 
 from .base import *  # noqa: F403, F401
 
-DEBUG = os.environ.get("DEBUG", "False").lower() in ("1", "true", "yes")  # noqa: F405
+# --- DEBUG: never expose Django debug pages on Render ---
+_on_render = os.environ.get("RENDER", "").lower() in ("true", "1", "yes") or bool(
+    os.environ.get("RENDER_EXTERNAL_URL", "").strip(),
+)
+_env_debug = os.environ.get("DEBUG", "False").lower() in ("1", "true", "yes")
+if _on_render:
+    DEBUG = False  # noqa: F405
+else:
+    DEBUG = _env_debug  # noqa: F405
 
 # --- Secrets: never use template defaults on Render ---
-if os.environ.get("RENDER", "").lower() in ("true", "1", "yes"):
+if _on_render:
     _sk = (os.environ.get("SECRET_KEY") or "").strip()  # noqa: F405
     if not _sk or _sk == "unsafe-dev-only-change-in-env":
         raise ImproperlyConfigured(
@@ -40,8 +51,26 @@ if _hsts > 0:
     )
     SECURE_HSTS_PRELOAD = os.environ.get("SECURE_HSTS_PRELOAD", "False").lower() in ("1", "true", "yes")
 
-# --- Database (Render PostgreSQL) ---
-if os.environ.get("RENDER", "").lower() in ("true", "1", "yes") and not os.environ.get("DATABASE_URL"):
+# --- Database: PostgreSQL required (never silent SQLite in production) ---
+# Missing DATABASE_URL falls back to SQLite in base.py — empty file on Render → "no such table"
+# on login. Fail fast with a clear message unless explicitly opted in for local prod experiments.
+_db = DATABASES["default"]  # noqa: F405
+_engine = str(_db.get("ENGINE") or "")
+_is_sqlite = _engine.endswith("sqlite3")
+if _is_sqlite and os.environ.get("BEATIQ_ALLOW_SQLITE_PRODUCTION", "").lower() not in (
+    "1",
+    "true",
+    "yes",
+):
+    raise ImproperlyConfigured(
+        "BeatIQ production requires PostgreSQL. DATABASE_URL is missing or invalid, so Django "
+        "would use SQLite (no migrations / empty DB → login HTTP 500). On Render: create a "
+        "PostgreSQL instance, link it to this web service so DATABASE_URL is set, set "
+        "DJANGO_SETTINGS_MODULE=config.settings.production, and ensure the release phase runs "
+        "`python manage.py migrate`. For rare local tests only, set BEATIQ_ALLOW_SQLITE_PRODUCTION=1."
+    )
+
+if _on_render and not os.environ.get("DATABASE_URL", "").strip():
     raise ImproperlyConfigured(
         "BeatIQ on Render requires DATABASE_URL (link the Render PostgreSQL instance to the web service).",
     )

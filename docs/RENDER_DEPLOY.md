@@ -48,6 +48,18 @@ Set at minimum:
 
 ---
 
+## 3b. Login returns HTTP 500 (`no such table: accounts_user`)
+
+That error means Django is using **SQLite** on the server (empty file, no migrations) instead of **PostgreSQL**. Typical causes:
+
+1. **`DATABASE_URL` is not set** on the web service — link your Render PostgreSQL to the web service so Render injects `DATABASE_URL`.
+2. **`DJANGO_SETTINGS_MODULE`** is not `config.settings.production` — wrong module may still point at dev-like DB config.
+3. **Release / migrate never ran** — ensure `preDeployCommand` (or a manual Shell) runs `python manage.py migrate` against the same database.
+
+After fixing env vars, redeploy. Production settings now **refuse SQLite** unless you explicitly set `BEATIQ_ALLOW_SQLITE_PRODUCTION=1` (local experiments only).
+
+---
+
 ## 4. Build / release / start commands
 
 **Build command** (install + static files):
