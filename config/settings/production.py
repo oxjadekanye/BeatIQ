@@ -14,6 +14,14 @@ from .base import *  # noqa: F403, F401
 
 DEBUG = os.environ.get("DEBUG", "False").lower() in ("1", "true", "yes")  # noqa: F405
 
+# --- Secrets: never use template defaults on Render ---
+if os.environ.get("RENDER", "").lower() in ("true", "1", "yes"):
+    _sk = (os.environ.get("SECRET_KEY") or "").strip()  # noqa: F405
+    if not _sk or _sk == "unsafe-dev-only-change-in-env":
+        raise ImproperlyConfigured(
+            "BeatIQ on Render requires a strong SECRET_KEY environment variable.",
+        )
+
 # --- Render / reverse proxy ---
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = True
@@ -39,6 +47,11 @@ if os.environ.get("RENDER", "").lower() in ("true", "1", "yes") and not os.envir
     )
 
 # --- Hosts / CSRF (browser admin + future web clients) ---
+_ensure_local_hosts = ("localhost", "127.0.0.1")
+for _h in _ensure_local_hosts:
+    if _h not in ALLOWED_HOSTS:  # noqa: F405
+        ALLOWED_HOSTS = [*ALLOWED_HOSTS, _h]  # noqa: F405
+
 _render_external = os.environ.get("RENDER_EXTERNAL_URL", "").strip()
 if _render_external:
     _rh = urlparse(_render_external).hostname

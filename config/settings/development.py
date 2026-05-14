@@ -9,7 +9,8 @@ if not os.environ.get("SECRET_KEY"):  # noqa: F405
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
-# Local dev: SQLite by default (set USE_SQLITE=false to use DATABASE_URL / Postgres from base).
+# Local dev: SQLite when USE_SQLITE=true (default). Set USE_SQLITE=false and DATABASE_URL
+# to use PostgreSQL via the same dj-database-url path as production (see config.settings.base).
 _use_sqlite = os.environ.get("USE_SQLITE", "true").lower() in ("1", "true", "yes")
 if _use_sqlite:
     DATABASES = {

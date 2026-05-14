@@ -35,7 +35,7 @@ Set at minimum:
 | `SECRET_KEY` | Long random string (50+ chars); **never** commit to git |
 | `DEBUG` | `False` |
 | `ALLOWED_HOSTS` | `beatiq-api.onrender.com,your-custom-domain.com` (no spaces) |
-| `DATABASE_URL` | Injected by Render when DB is linked |
+| `DATABASE_URL` | Injected by Render when DB is linked (`dj-database-url`, `conn_max_age=600`, `ssl_require=True`) |
 | `PUBLIC_API_BASE_URL` | `https://beatiq-api.onrender.com` (no `/api/v1` suffix) |
 | `CORS_ALLOWED_ORIGINS` | Comma-separated `https://` origins for **browser** clients (optional if you only use native Android; see below) |
 | `CSRF_TRUSTED_ORIGINS` | Optional; if unset and `RENDER_EXTERNAL_URL` is `https://…`, production derives one entry |
@@ -88,6 +88,7 @@ gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 120
 
 - Migrations are **versioned** under each app’s `migrations/` package.
 - Run them only via **release** or manual `migrate` — never auto-run seed commands in production.
+- On Render, **`preDeployCommand`** in `render.yaml` runs `scripts/render_release.sh` (`migrate --noinput`) **after** a successful build and **before** traffic is routed to the new release, so schema is applied before Gunicorn serves the new deploy.
 
 ---
 
