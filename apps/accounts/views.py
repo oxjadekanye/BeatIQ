@@ -21,7 +21,7 @@ from .serializers import (
     UserSerializer,
 )
 from .services.email_verification import build_verification_token, parse_verification_token
-from .tasks import send_verification_email_task
+from .tasks import send_verification_email_task, send_welcome_email_task
 
 User = get_user_model()
 
@@ -108,6 +108,7 @@ class VerifyEmailView(APIView):
 
         user.email_verified_at = timezone.now()
         user.save(update_fields=["email_verified_at"])
+        send_welcome_email_task.delay(str(user.pk))
         return Response(
             {
                 "detail": "Email verified successfully.",

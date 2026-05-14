@@ -1,4 +1,5 @@
 # BeatIQ backend — production-oriented pins (adjust in CI as needed)
+# WSGI + static files for Render: gunicorn + whitenoise (see config/settings/base.py)
 Django>=4.2,<6
 djangorestframework>=3.15,<4
 djangorestframework-simplejwt>=5.3,<6

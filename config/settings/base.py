@@ -4,7 +4,7 @@ Split settings: `base` shared config, `development` / `production` overrides.
 import os
 from datetime import timedelta
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from dotenv import load_dotenv
 
@@ -99,19 +99,33 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
 
-# --- Database (PostgreSQL) ---
+# --- Database (PostgreSQL from DATABASE_URL or discrete POSTGRES_* env vars) ---
 def _database_from_env():
     url = os.environ.get("DATABASE_URL")
     if url:
+        # Render / Heroku style URLs often use postgres://; urlparse handles postgresql:// best.
+        if url.startswith("postgres://") and not url.startswith("postgresql://"):
+            url = "postgresql://" + url[len("postgres://") :]
         parsed = urlparse(url)
-        return {
+        path = (parsed.path or "").lstrip("/")
+        db_name = path.split("?", 1)[0] or "beatiq"
+        user = unquote(parsed.username) if parsed.username else "postgres"
+        password = unquote(parsed.password) if parsed.password else ""
+        host = parsed.hostname or "localhost"
+        port = str(parsed.port or 5432)
+        query = parse_qs(parsed.query)
+        sslmode = (query.get("sslmode") or [None])[0]
+        cfg: dict = {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": parsed.path.lstrip("/") or "beatiq",
-            "USER": parsed.username or "postgres",
-            "PASSWORD": parsed.password or "",
-            "HOST": parsed.hostname or "localhost",
-            "PORT": str(parsed.port or 5432),
+            "NAME": db_name,
+            "USER": user,
+            "PASSWORD": password,
+            "HOST": host,
+            "PORT": port,
         }
+        if sslmode:
+            cfg["OPTIONS"] = {"sslmode": sslmode}
+        return cfg
     return {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("POSTGRES_DB", "beatiq"),

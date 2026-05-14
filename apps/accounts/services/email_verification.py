@@ -43,3 +43,19 @@ def send_verification_email(user: User, *, verify_url: str) -> None:
         [user.email],
         fail_silently=False,
     )
+
+
+def send_welcome_email(user: User) -> None:
+    subject = "Welcome to BeatIQ"
+    body = (
+        "Your email is verified — thanks for joining BeatIQ.\n\n"
+        "Find every beat: your library, playlists, and downloads stay private to your account.\n\n"
+        "Happy listening,\nThe BeatIQ team\n"
+    )
+    send_mail(
+        subject,
+        body,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+        fail_silently=False,
+    )

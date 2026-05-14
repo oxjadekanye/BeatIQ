@@ -1,5 +1,7 @@
-# Local / secrets
+# Local / secrets (BeatIQ — never commit real .env)
 .env
+.env.*
+!.env.example
 *.sqlite3
 db.sqlite3
 

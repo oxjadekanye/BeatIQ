@@ -56,6 +56,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = (
             "user",
             "display_name",
+            "birth_year",
+            "birth_month",
             "avatar_url",
             "bio",
             "country_code",
@@ -73,12 +75,23 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=8, style={"input_type": "password"})
-    password_confirm = serializers.CharField(write_only=True, min_length=8, style={"input_type": "password"})
+    password = serializers.CharField(write_only=True, min_length=6, style={"input_type": "password"})
+    password_confirm = serializers.CharField(write_only=True, min_length=6, style={"input_type": "password"})
+    full_name = serializers.CharField(write_only=True, max_length=255)
+    birth_year = serializers.IntegerField(write_only=True, min_value=1900, max_value=2100)
+    birth_month = serializers.IntegerField(write_only=True, min_value=1, max_value=12)
 
     class Meta:
         model = UserModel
-        fields = ("email", "username", "password", "password_confirm")
+        fields = (
+            "email",
+            "username",
+            "password",
+            "password_confirm",
+            "full_name",
+            "birth_year",
+            "birth_month",
+        )
         extra_kwargs = {
             "username": {"required": False, "allow_blank": True},
             "email": {"required": True},
@@ -99,6 +112,9 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         import uuid
 
+        full_name = (validated_data.pop("full_name", "") or "").strip()
+        birth_year = validated_data.pop("birth_year", None)
+        birth_month = validated_data.pop("birth_month", None)
         password = validated_data.pop("password")
         email = validated_data["email"]
         username = (validated_data.get("username") or "").strip()
@@ -107,8 +123,22 @@ class RegisterSerializer(serializers.ModelSerializer):
             username = base[:150]
         if UserModel.objects.filter(username=username).exclude(email=email).exists():
             username = f"{username[:120]}_{uuid.uuid4().hex[:8]}"
-        return UserModel.objects.create_user(
+        first_name = ""
+        last_name = ""
+        if full_name:
+            parts = full_name.split(None, 1)
+            first_name = parts[0][:150]
+            last_name = (parts[1] if len(parts) > 1 else "")[:150]
+        user = UserModel.objects.create_user(
             username=username,
             email=email,
             password=password,
+            first_name=first_name,
+            last_name=last_name,
         )
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile.display_name = full_name or profile.display_name
+        profile.birth_year = birth_year
+        profile.birth_month = birth_month
+        profile.save()
+        return user

@@ -31,6 +31,8 @@ class UserProfile(TimeStampedModel):
         related_name="profile",
     )
     display_name = models.CharField(max_length=255, blank=True)
+    birth_year = models.PositiveSmallIntegerField(null=True, blank=True)
+    birth_month = models.PositiveSmallIntegerField(null=True, blank=True)
     avatar_url = models.URLField(max_length=500, blank=True)
     bio = models.TextField(blank=True)
     country_code = models.CharField(max_length=2, blank=True)
