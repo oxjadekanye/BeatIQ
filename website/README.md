@@ -22,7 +22,12 @@ npm ci
 npm run build
 ```
 
-After `npm run build`, the static site is in **`website/out/`** (includes `index.html` for `/`).
+After `npm run build`, the static site is in **`website/out/`** (includes `index.html` for `/`). Preview locally, for example:
+
+```bash
+cd website
+npx --yes serve out
+```
 
 ## Vercel (fixes 404 when the Git repo is the full BeatIQ monorepo)
 
