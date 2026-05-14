@@ -14,6 +14,10 @@ python manage.py runserver 0.0.0.0:8000
 
 Default settings: `config.settings.development` (SQLite when `USE_SQLITE=true`).
 
+## Public marketing site (Vercel)
+
+The **Next.js** site for **www.beatiq.co.uk** (landing + legal pages) lives in **`website/`**. It has **no backend dependency**. See **[website/README.md](website/README.md)** for local build and Vercel root directory (`website`).
+
 ## Production on Render
 
 See **[docs/RENDER_DEPLOY.md](docs/RENDER_DEPLOY.md)** for environment variables, build/release/start commands, and the **exact Android API base URL** pattern.

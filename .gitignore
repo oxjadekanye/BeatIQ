@@ -18,3 +18,7 @@ media/
 # IDE
 .idea/
 .vscode/
+
+# Next.js site (also ignored in website/.gitignore)
+website/node_modules/
+website/.next/
