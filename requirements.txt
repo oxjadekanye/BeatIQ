@@ -1,0 +1,13 @@
+# BeatIQ backend — production-oriented pins (adjust in CI as needed)
+Django>=4.2,<6
+djangorestframework>=3.15,<4
+djangorestframework-simplejwt>=5.3,<6
+drf-spectacular>=0.27,<0.29
+django-cors-headers>=4.3,<5
+django-filter>=24.2,<25
+psycopg2-binary>=2.9.9,<3
+python-dotenv>=1.0,<2
+gunicorn>=22.0,<23
+whitenoise>=6.6,<7
+celery[redis]>=5.3,<6
+redis>=5.0,<6
