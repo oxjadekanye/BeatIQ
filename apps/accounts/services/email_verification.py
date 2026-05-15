@@ -36,13 +36,21 @@ def send_verification_email(user: User, *, verify_url: str) -> None:
         f"Confirm your email by opening this link (or paste into your browser):\n{verify_url}\n\n"
         "If you did not create an account, you can ignore this message.\n"
     )
-    send_mail(
-        subject,
-        body,
-        settings.DEFAULT_FROM_EMAIL,
-        [user.email],
-        fail_silently=False,
-    )
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", None) or getattr(settings, "EMAIL_HOST_USER", None)
+    if not from_email:
+        logger.warning("verification_email_skipped_no_from_email user_id=%s", user.pk)
+        return
+    try:
+        send_mail(
+            subject,
+            body,
+            from_email,
+            [user.email],
+            fail_silently=False,
+        )
+    except Exception as exc:
+        # Never fail registration HTTP: Celery eager / no broker runs this in-request.
+        logger.exception("verification_email_failed user_id=%s: %s", user.pk, exc)
 
 
 def send_welcome_email(user: User) -> None:
@@ -52,10 +60,17 @@ def send_welcome_email(user: User) -> None:
         "Find every beat: your library, playlists, and downloads stay private to your account.\n\n"
         "Happy listening,\nThe BeatIQ team\n"
     )
-    send_mail(
-        subject,
-        body,
-        settings.DEFAULT_FROM_EMAIL,
-        [user.email],
-        fail_silently=False,
-    )
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", None) or getattr(settings, "EMAIL_HOST_USER", None)
+    if not from_email:
+        logger.warning("welcome_email_skipped_no_from_email user_id=%s", user.pk)
+        return
+    try:
+        send_mail(
+            subject,
+            body,
+            from_email,
+            [user.email],
+            fail_silently=False,
+        )
+    except Exception as exc:
+        logger.exception("welcome_email_failed user_id=%s: %s", user.pk, exc)

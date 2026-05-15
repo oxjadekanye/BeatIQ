@@ -100,9 +100,15 @@ CORS_ALLOW_ALL_ORIGINS = False
 # --- Celery: real broker in production ---
 CELERY_TASK_ALWAYS_EAGER = False
 
-EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
-EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+EMAIL_HOST = (os.environ.get("EMAIL_HOST") or "").strip()
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() in ("1", "true", "yes")
+# Avoid hanging TCP connects during API requests (e.g. registration) when SMTP is missing or wrong.
+EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", "12"))
+_email_backend = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+if "smtp" in _email_backend and not EMAIL_HOST:
+    EMAIL_BACKEND = "django.core.mail.backends.dummy.EmailBackend"
+else:
+    EMAIL_BACKEND = _email_backend

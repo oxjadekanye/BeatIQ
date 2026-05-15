@@ -42,7 +42,9 @@ Set at minimum:
 
 **Render sets** `RENDER=true` and `RENDER_EXTERNAL_URL` on web services — production uses them for host/CSRF defaults.
 
-**Email (optional):** `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL`.
+**Email (optional):** `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL`. Set `EMAIL_TIMEOUT` (seconds, default `12`) so SMTP misconfiguration cannot hang signup for minutes. If `EMAIL_BACKEND` is SMTP and `EMAIL_HOST` is empty, production switches to a **dummy** mail backend (API signup still returns 201; configure SMTP to send real messages).
+
+**Registration timeouts:** Sign-up runs verification email in-process when Redis/Celery is not used. Without `EMAIL_TIMEOUT` and non-throwing mail, a bad SMTP host could block until the app timed out. The app uses a longer HTTP read timeout for `POST /accounts/register/` only.
 
 **Celery:** set `CELERY_BROKER_URL` / `CELERY_RESULT_BACKEND` to a **Render Redis** URL if you run a worker service; otherwise async tasks need another broker.
 
