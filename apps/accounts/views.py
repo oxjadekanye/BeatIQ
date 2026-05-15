@@ -3,7 +3,6 @@ from urllib.parse import urlencode
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics, permissions, status
@@ -20,6 +19,7 @@ from .serializers import (
     UserProfileUpdateSerializer,
     UserSerializer,
 )
+from .services.account_activation import activate_user_for_login
 from .services.email_verification import build_verification_token, parse_verification_token
 from .tasks import (
     enqueue_or_apply_sync,
@@ -112,8 +112,8 @@ class VerifyEmailView(APIView):
         if user.email_verified_at:
             return Response({"detail": "Email already verified.", "user": UserSerializer(user).data})
 
-        user.email_verified_at = timezone.now()
-        user.save(update_fields=["email_verified_at"])
+        activate_user_for_login(user, verify_email=True)
+        user.refresh_from_db()
         enqueue_or_apply_sync(send_welcome_email_task, args=(str(user.pk),))
         return Response(
             {

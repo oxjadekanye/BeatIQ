@@ -1,9 +1,9 @@
-"""Create or update the two standard BeatIQ demo accounts (verified email) for local testing."""
+"""Create or update the two standard BeatIQ accounts (verified email) for local/staging use."""
 
 from django.core.management.base import BaseCommand
-from django.utils import timezone
 
 from apps.accounts.models import User, UserProfile
+from apps.accounts.services.account_activation import activate_user_for_login, normalize_email
 
 
 def _upsert_user(
@@ -18,12 +18,14 @@ def _upsert_user(
     username_hint: str,
 ) -> None:
     base_username = username_hint[:150]
+    normalized_email = normalize_email(email)
     user, created = User.objects.get_or_create(
-        email=email.lower().strip(),
+        email=normalized_email,
         defaults={
             "username": base_username,
             "first_name": first_name[:150],
             "last_name": last_name[:150],
+            "is_active": True,
         },
     )
     if not created:
@@ -31,8 +33,9 @@ def _upsert_user(
     user.first_name = first_name[:150]
     user.last_name = last_name[:150]
     user.set_password(password)
-    user.email_verified_at = timezone.now()
+    user.is_active = True
     user.save()
+    activate_user_for_login(user, verify_email=True)
     profile, _ = UserProfile.objects.get_or_create(user=user)
     profile.display_name = display_name
     profile.birth_year = birth_year
@@ -42,7 +45,7 @@ def _upsert_user(
 
 class Command(BaseCommand):
     help = (
-        "Ensures two standard accounts exist (verified): Xavier Adekanye and Meedun Adekanye."
+        "Ensures two standard accounts exist (verified email): Xavier Adekanye and Inumidun Bakare."
     )
 
     def handle(self, *args, **options):
@@ -58,12 +61,12 @@ class Command(BaseCommand):
                 "username_hint": "oxj_adekanye",
             },
             {
-                "email": "inumidunbakare@yahoo.com",
+                "email": "inumidunbakare@gmail.com",
                 "password": "Aderoju1122@",
-                "first_name": "Meedun",
-                "last_name": "Adekanye",
-                "display_name": "Meedun Adekanye",
-                "birth_year": 1991,
+                "first_name": "Inumidun",
+                "last_name": "Bakare",
+                "display_name": "Inumidun Bakare",
+                "birth_year": 1992,
                 "birth_month": 6,
                 "username_hint": "inumidunbakare",
             },

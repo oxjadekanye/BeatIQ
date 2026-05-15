@@ -4,12 +4,13 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import User, UserProfile
+from .services.account_activation import normalize_email
 
 UserModel = get_user_model()
 
 
 class BeatIQTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """JWT with `email_verified` claim; optional gate on unverified users."""
+    """JWT with `email_verified` claim; case-insensitive email login with clear errors."""
 
     @classmethod
     def get_token(cls, user):
@@ -18,13 +19,43 @@ class BeatIQTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
     def validate(self, attrs):
-        data = super().validate(attrs)
-        user = self.user
+        email = normalize_email(attrs.get(self.username_field) or "")
+        password = attrs.get("password") or ""
+        if not email or not password:
+            raise serializers.ValidationError(
+                {"detail": "Email and password are required.", "code": "credentials_required"},
+            )
+
+        user = UserModel.objects.filter(email__iexact=email).first()
+        if user is None:
+            raise serializers.ValidationError(
+                {
+                    "detail": "No BeatIQ account exists for this email. Create an account first.",
+                    "code": "account_not_found",
+                },
+            )
+        if not user.is_active:
+            raise serializers.ValidationError(
+                {
+                    "detail": "This account is not active yet. Verify your email or contact support.",
+                    "code": "account_inactive",
+                },
+            )
+        if not user.check_password(password):
+            raise serializers.ValidationError(
+                {"detail": "Incorrect password.", "code": "invalid_password"},
+            )
         if getattr(settings, "REQUIRE_EMAIL_VERIFICATION_FOR_JWT", False) and not user.email_verified_at:
             raise serializers.ValidationError(
-                {"detail": "Email address is not verified.", "code": "email_not_verified"},
+                {
+                    "detail": "Email address is not verified. Check your inbox for the verification link.",
+                    "code": "email_not_verified",
+                },
             )
-        return data
+
+        self.user = user
+        refresh = self.get_token(user)
+        return {"refresh": str(refresh), "access": str(refresh.access_token)}
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -135,6 +166,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=password,
             first_name=first_name,
             last_name=last_name,
+            is_active=True,
         )
         profile, _ = UserProfile.objects.get_or_create(user=user)
         profile.display_name = full_name or profile.display_name
