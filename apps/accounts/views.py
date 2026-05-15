@@ -21,7 +21,12 @@ from .serializers import (
     UserSerializer,
 )
 from .services.email_verification import build_verification_token, parse_verification_token
-from .tasks import send_verification_email_task, send_welcome_email_task
+from .tasks import (
+    enqueue_or_apply_sync,
+    notify_admin_new_signup_task,
+    send_verification_email_task,
+    send_welcome_email_task,
+)
 
 User = get_user_model()
 
@@ -63,10 +68,11 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        enqueue_or_apply_sync(notify_admin_new_signup_task, args=(str(user.pk),))
         token = build_verification_token(str(user.pk))
         path = reverse("accounts-verify-email")
         verify_url = request.build_absolute_uri(path) + "?" + urlencode({"token": token})
-        send_verification_email_task.delay(str(user.pk), verify_url)
+        enqueue_or_apply_sync(send_verification_email_task, args=(str(user.pk), verify_url))
         headers = self.get_success_headers({})
         return Response(
             {
@@ -108,7 +114,7 @@ class VerifyEmailView(APIView):
 
         user.email_verified_at = timezone.now()
         user.save(update_fields=["email_verified_at"])
-        send_welcome_email_task.delay(str(user.pk))
+        enqueue_or_apply_sync(send_welcome_email_task, args=(str(user.pk),))
         return Response(
             {
                 "detail": "Email verified successfully.",
@@ -135,7 +141,7 @@ class ResendVerificationView(APIView):
         token = build_verification_token(str(user.pk))
         path = reverse("accounts-verify-email")
         verify_url = request.build_absolute_uri(path) + "?" + urlencode({"token": token})
-        send_verification_email_task.delay(str(user.pk), verify_url)
+        enqueue_or_apply_sync(send_verification_email_task, args=(str(user.pk), verify_url))
         return Response({"detail": "Verification email sent."}, status=status.HTTP_200_OK)
 
 
