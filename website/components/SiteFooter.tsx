@@ -5,6 +5,7 @@ const legal = [
   { href: "/privacy-policy/", label: "Privacy Policy" },
   { href: "/terms-and-conditions/", label: "Terms and Conditions" },
   { href: "/cookie-policy/", label: "Cookie Policy" },
+  { href: "/delete-account/", label: "Delete Account" },
 ] as const;
 
 export function SiteFooter() {
